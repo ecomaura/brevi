@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brevistay Signup Test</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="card">
+  <div class="brand">Brevistay</div>
+  <h1>Referral Signup Test</h1>
+  <p class="sub">Authorized APK-flow reproduction</p>
+
+  <label>Mobile number</label>
+  <input id="mobile" inputmode="numeric" maxlength="13" placeholder="9876543210">
+
+  <label>Referral code</label>
+  <input id="ref" autocomplete="off" placeholder="Enter referral code">
+
+  <button id="send">Send OTP</button>
+
+  <section id="otpBox" class="hidden">
+    <label>OTP</label>
+    <input id="otp" inputmode="numeric" maxlength="8" placeholder="Enter OTP">
+
+    <div class="grid">
+      <div>
+        <label>First name</label>
+        <input id="name" placeholder="First name">
+      </div>
+      <div>
+        <label>Last name</label>
+        <input id="last" placeholder="Last name">
+      </div>
+    </div>
+
+    <label>Email <span>(optional)</span></label>
+    <input id="email" type="email" placeholder="name@example.com">
+
+    <button id="verify">Verify & Create Account</button>
+  </section>
+
+  <pre id="status">Ready.</pre>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
