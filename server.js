@@ -1,9 +1,12 @@
 import express from "express";
-import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json({ limit: "32kb" }));
-app.use(express.static("public"));
 
 const BASE = process.env.BREVISTAY_BASE || "https://session-ms.brevistay.com";
 
@@ -15,17 +18,17 @@ function headers() {
   };
   if (process.env.BREVI_CHANNEL) h["brevi-channel"] = process.env.BREVI_CHANNEL;
   if (process.env.BREVI_CHANNEL_VERSION) h["brevi-channel-version"] = process.env.BREVI_CHANNEL_VERSION;
-  if (process.env.BREVI_AUTH_HEADER && process.env.BREVI_AUTH_VALUE)
+  if (process.env.BREVI_AUTH_HEADER && process.env.BREVI_AUTH_VALUE) {
     h[process.env.BREVI_AUTH_HEADER] = process.env.BREVI_AUTH_VALUE;
+  }
   return h;
 }
 
-async function call(path, body) {
-  const r = await fetch(`${BASE}${path}`, {
+async function call(pathname, body) {
+  const r = await fetch(`${BASE}${pathname}`, {
     method: "POST",
     headers: headers(),
-    body: JSON.stringify(body),
-    redirect: "manual"
+    body: JSON.stringify(body)
   });
   const text = await r.text();
   let data;
@@ -51,7 +54,9 @@ app.post("/api/send-otp", async (req, res) => {
       delivery_channel: "sms"
     };
     const result = await call("/userLogin", body);
-    res.status(result.status || 502).json({ ok: result.ok, stage: "otp", response: result.data });
+    res.status(result.status || 502).json({
+      ok: result.ok, stage: "otp", response: result.data
+    });
   } catch (e) {
     res.status(400).json({ ok: false, error: e.message });
   }
@@ -80,7 +85,9 @@ app.post("/api/verify", async (req, res) => {
       lastName: String(req.body.lastName || "").trim()
     };
     const result = await call("/verify-user", body);
-    res.status(result.status || 502).json({ ok: result.ok, stage: "verify", response: result.data });
+    res.status(result.status || 502).json({
+      ok: result.ok, stage: "verify", response: result.data
+    });
   } catch (e) {
     res.status(400).json({ ok: false, error: e.message });
   }
@@ -88,5 +95,20 @@ app.post("/api/verify", async (req, res) => {
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Vercel's Express integration can use the exported app as the server entrypoint.
+// Explicitly serve the SPA root on Vercel/Express.
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Static assets after explicit root route.
+app.use(express.static(path.join(__dirname, "public")));
+
+// Friendly fallback for browser navigation.
+app.use((req, res, next) => {
+  if (req.method === "GET" && !req.path.startsWith("/api/")) {
+    return res.sendFile(path.join(__dirname, "public", "index.html"));
+  }
+  next();
+});
+
 export default app;
